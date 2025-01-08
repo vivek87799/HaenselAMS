@@ -59,6 +59,13 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+    AIRFLOW_VAR_SESSION_LOWER_LIMIT_DATE: 0
+    AIRFLOW_VAR_CONV_TYPE_ID: 'data_engineering_challenge'
+    AIRFLOW_VAR_API_URL: 'https://api.ihc-attribution.com/v1/compute_ihc?'
+    AIRFLOW_VAR_MAX_CUSTOMER_JOURNEYS: 100
+    AIRFLOW_VAR_MAX_SESSIONS: 3000
+    
+
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
@@ -71,10 +78,13 @@ x-airflow-common:
     # If you want to use it, outcomment it and replace airflow.cfg with the name of your config file
     # AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
   volumes:
-    - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
-    - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
-    - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
-    - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
+    # - ./sources:/opt/airflow
+    - ./sources/dags:/opt/airflow/dags
+    - ./sources/logs:/opt/airflow/logs
+    - ./sources/config:/opt/airflow/config
+    - ./sources/plugins:/opt/airflow/plugins
+    # - ./sources/helpers:/opt/airflow/helpers
+    - ./sources/data:/opt/airflow/data
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -208,7 +218,13 @@ services:
       _PIP_ADDITIONAL_REQUIREMENTS: ''
     user: "0:0"
     volumes:
-      - ${AIRFLOW_PROJ_DIR:-.}:/sources
+      # - ./sources:/opt/airflow
+      - ./sources/dags:/opt/airflow/dags
+      - ./sources/logs:/opt/airflow/logs
+      - ./sources/config:/opt/airflow/config
+      - ./sources/plugins:/opt/airflow/plugins
+      # - ./sources/helpers:/opt/airflow/helpers
+      - ./sources/data:/opt/airflow/data
 
   airflow-cli:
     <<: *airflow-common

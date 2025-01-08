@@ -2,7 +2,7 @@
 recruitment challenge for job at HAMS
 
 # Understand the IHC attribution model
-- Familiarize yourself with the IHC attribution model 
+- Familiarize with the IHC attribution model 
 # Task
  Each step should run as separate task in Apache Airflow. 
     - Query Data from a database 
