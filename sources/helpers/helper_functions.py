@@ -6,13 +6,18 @@ import aiohttp
 
 import pandas as pd
 
-## Insert API Key here
-api_key = '8e7fdc7c-2aee-4cd7-b4e7-cec563ded602'
+# --- Constants ---
+## API Key to be added as a AIRFLOW variable in production code
+api_key = '18e7fdc7c-2aee-4cd7-b4e7-cec563ded602'
+CONV_TYPE_ID = "data_engineering_challenge"
+API_URL = f"https://api.ihc-attribution.com/v1/compute_ihc?conv_type_id={CONV_TYPE_ID}".format(CONV_TYPE_ID = CONV_TYPE_ID)
 
-## Insert Conversion Type ID here
-conv_type_id = 'data_engineering_challenge'
 
-api_url = api_url = "https://api.ihc-attribution.com/v1/compute_ihc?conv_type_id={conv_type_id}".format(conv_type_id = conv_type_id)
+# --- Logging Configuration ---
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
 
 async def send_batch_async(session, customer_journeys):
     """
@@ -21,6 +26,8 @@ async def send_batch_async(session, customer_journeys):
     Args:
       session: An aiohttp.ClientSession object.
       customer_journeys: A list of dictionaries representing the data to send.
+    Return:
+      A list of dicts 
     """
     try:
         body = {
@@ -29,7 +36,7 @@ async def send_batch_async(session, customer_journeys):
         
         
         async with session.post(
-                api_url, 
+                API_URL, 
                 data=json.dumps(body), 
                 headers= {
                     'Content-Type': 'application/json',    
@@ -37,16 +44,12 @@ async def send_batch_async(session, customer_journeys):
                 }
             ) as response:
             results = await response.json()
-            print(body)
-            print(results)
-            print(f"Status Code: {results['statusCode']}")
-            print("-"*30)
-            print(f"Partial Failure Errors: {results['partialFailureErrors']}")
-            print("-"*30)
+            logging.info(f"Status Code: {results['statusCode']}")
+            logging.info(f"Partial Failure Errors: {results['partialFailureErrors']}")
             return results
            
-    except aiohttp.ClientError as e:
-        print(f"Error sending batch: {e}")
+    except Exception as e:
+        logging.error(f"Error sending batch: {e}")
 
 
 def concat_batch_data(file_path):
@@ -59,20 +62,24 @@ def concat_batch_data(file_path):
   Returns:
     A Pandas DataFrame containing the processed data.
   """
+  try:
+    df_list = []  # List to store DataFrames
 
-  df_list = []  # List to store DataFrames
+    with open(file_path, 'r') as f:
+        data = json.load(f)
 
-  with open(file_path, 'r') as f:
-      data = json.load(f)
+    for item in data:
+        if item['statusCode'] in (200, 206):
+            df_list.append(pd.DataFrame(item['value']))
 
-  for item in data:
-      if item['statusCode'] in (200, 206):
-          df_list.append(pd.DataFrame(item['value']))
+    # Concatenate all DataFrames in the list
+    df = pd.concat(df_list, ignore_index=True)
 
-  # Concatenate all DataFrames in the list
-  df = pd.concat(df_list, ignore_index=True)
+    return df
 
-  return df
+  except Exception as e:
+     logging.error(f"Error in concat_batch_data function: {e}")
+
 
 def rescale_group(df):
   """Normalizes the columns 'initializer', 'holder', 'closer', and 'ihc' within each group.

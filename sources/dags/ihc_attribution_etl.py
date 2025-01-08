@@ -10,6 +10,7 @@
 
 import logging
 import json
+import gc
 from datetime import datetime, timedelta
 from itertools import chain
 
@@ -51,7 +52,7 @@ default_args = {
 @dag(
     dag_id="ihc_attribution_etl",
     default_args=default_args,
-    start_date=datetime(2025, 1, 5),
+    start_date=datetime(2025, 1, 6),
     schedule_interval="@daily",
 )
 def ihc_attribution_etl():
@@ -167,7 +168,7 @@ def ihc_attribution_etl():
             file_path: File path of the transformed data persisted as JSON file.
 
         Returns the path to the API result file.
-        
+        """
         
         results = []
 
@@ -221,9 +222,8 @@ def ihc_attribution_etl():
 
         except Exception as e:
             logging.error(f"Error during API call: {e}")
-        
-        """
-        return DATA_FOLDER + "api_results.json"
+        # --- Used to get the simulated api call data
+        # return DATA_FOLDER + "api_results.json"
             
     
     @task()
@@ -242,6 +242,10 @@ def ihc_attribution_etl():
             df = df.rename(columns={"conversion_id": "conv_id"})
             df = df.drop(["initializer", "holder", "closer"], axis=1)
 
+            # --- The below step will be required if a Customer journy could go beyond <MAX_SESSIONS> sessions
+            # From the documentation we observed that thre returned ihc attribution is between 0-1
+            ## df_rescale_group = df.groupby("conversion_id").apply(rescale_group)
+
             with sqlite3.connect(DB_PATH) as conn:
                 # Write the DataFrame to the database
                 df.to_sql("attribution_customer_journey", conn, if_exists="replace", index=False)
@@ -249,6 +253,7 @@ def ihc_attribution_etl():
                 # Read data from tables into Pandas DataFrames
                 session_sources_df = pd.read_sql_query("SELECT * FROM session_sources", conn)
                 session_costs_df = pd.read_sql_query("SELECT * FROM session_costs", conn)
+                # Data from the table is read again for readability 
                 attribution_customer_journey_df = pd.read_sql_query("SELECT * FROM attribution_customer_journey", conn)
                 conversions_df = pd.read_sql_query("SELECT * FROM conversions", conn)
 
@@ -293,7 +298,17 @@ def ihc_attribution_etl():
 
         except (pd.errors.EmptyDataError, sqlite3.Error) as e:
             logging.error(f"Error writing attribution data: {e}")
-            raise
+        except Exception as e:
+            logging.error(f"Error in attribution data module: {e}")
+        finally:
+            del session_sources_df
+            del session_costs_df
+            del channel_reporting_cost
+            del channel_reporting_ihc
+            del channel_reporting_ihc_revenue
+            del channel_reporting_df
+            del attribution_customer_journey_df
+            gc.collect() 
 
     @task()
     def export_data() -> None:

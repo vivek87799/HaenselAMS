@@ -24,9 +24,6 @@ mkdir -p ./sources/dags ./sources/logs ./sources/plugins ./sources/config ./sour
 echo -e "AIRFLOW_UID=$(id -u)\nAIRFLOW_GID=0" > .env
 ```
 - Add the .db and .sql file into the data folder that was created before
-```
-
-```
 - init the airflow setup by running the below command
 ```
 docker-compose up airflow-init

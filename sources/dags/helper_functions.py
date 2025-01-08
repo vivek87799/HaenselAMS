@@ -6,15 +6,12 @@ import aiohttp
 
 import pandas as pd
 
-## Insert API Key here
+# --- Constants ---
+## API Key to be added as a AIRFLOW variable in production code
 api_key = '18e7fdc7c-2aee-4cd7-b4e7-cec563ded602'
 CONV_TYPE_ID = "data_engineering_challenge"
-API_URL = f"https://api.ihc-attribution.com/v1/compute_ihc?conv_type_id={CONV_TYPE_ID}"
+API_URL = f"https://api.ihc-attribution.com/v1/compute_ihc?conv_type_id={CONV_TYPE_ID}".format(CONV_TYPE_ID = CONV_TYPE_ID)
 
-## Insert Conversion Type ID here
-conv_type_id = 'data_engineering_challenge'
-
-api_url = "https://api.ihc-attribution.com/v1/compute_ihc?conv_type_id={conv_type_id}".format(conv_type_id = conv_type_id)
 
 # --- Logging Configuration ---
 logging.basicConfig(
@@ -29,6 +26,8 @@ async def send_batch_async(session, customer_journeys):
     Args:
       session: An aiohttp.ClientSession object.
       customer_journeys: A list of dictionaries representing the data to send.
+    Return:
+      A list of dicts 
     """
     try:
         body = {
@@ -37,7 +36,7 @@ async def send_batch_async(session, customer_journeys):
         
         
         async with session.post(
-                api_url, 
+                API_URL, 
                 data=json.dumps(body), 
                 headers= {
                     'Content-Type': 'application/json',    
