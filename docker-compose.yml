@@ -78,13 +78,13 @@ x-airflow-common:
     # If you want to use it, outcomment it and replace airflow.cfg with the name of your config file
     # AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
   volumes:
-    # - ./sources:/opt/airflow
-    - ./sources/dags:/opt/airflow/dags
-    - ./sources/logs:/opt/airflow/logs
-    - ./sources/config:/opt/airflow/config
-    - ./sources/plugins:/opt/airflow/plugins
-    # - ./sources/helpers:/opt/airflow/helpers
-    - ./sources/data:/opt/airflow/data
+    # - ./source:/opt/airflow
+    - ./source/dags:/opt/airflow/dags
+    - ./source/logs:/opt/airflow/logs
+    - ./source/config:/opt/airflow/config
+    - ./source/plugins:/opt/airflow/plugins
+    # - ./source/helpers:/opt/airflow/helpers
+    - ./source/data:/opt/airflow/data
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -176,37 +176,37 @@ services:
         mem_available=$$(($$(getconf _PHYS_PAGES) * $$(getconf PAGE_SIZE) / one_meg))
         cpus_available=$$(grep -cE 'cpu[0-9]+' /proc/stat)
         disk_available=$$(df / | tail -1 | awk '{print $$4}')
-        warning_resources="false"
+        warning_resource="false"
         if (( mem_available < 4000 )) ; then
           echo
           echo -e "\033[1;33mWARNING!!!: Not enough memory available for Docker.\e[0m"
           echo "At least 4GB of memory required. You have $$(numfmt --to iec $$((mem_available * one_meg)))"
           echo
-          warning_resources="true"
+          warning_resource="true"
         fi
         if (( cpus_available < 2 )); then
           echo
           echo -e "\033[1;33mWARNING!!!: Not enough CPUS available for Docker.\e[0m"
           echo "At least 2 CPUs recommended. You have $${cpus_available}"
           echo
-          warning_resources="true"
+          warning_resource="true"
         fi
         if (( disk_available < one_meg * 10 )); then
           echo
           echo -e "\033[1;33mWARNING!!!: Not enough Disk space available for Docker.\e[0m"
           echo "At least 10 GBs recommended. You have $$(numfmt --to iec $$((disk_available * 1024 )))"
           echo
-          warning_resources="true"
+          warning_resource="true"
         fi
-        if [[ $${warning_resources} == "true" ]]; then
+        if [[ $${warning_resource} == "true" ]]; then
           echo
-          echo -e "\033[1;33mWARNING!!!: You have not enough resources to run Airflow (see above)!\e[0m"
-          echo "Please follow the instructions to increase amount of resources available:"
+          echo -e "\033[1;33mWARNING!!!: You have not enough resource to run Airflow (see above)!\e[0m"
+          echo "Please follow the instructions to increase amount of resource available:"
           echo "   https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#before-you-begin"
           echo
         fi
-        mkdir -p /sources/logs /sources/dags /sources/plugins
-        chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
+        mkdir -p /source/logs /source/dags /source/plugins
+        chown -R "${AIRFLOW_UID}:0" /source/{logs,dags,plugins}
         exec /entrypoint airflow version
     # yamllint enable rule:line-length
     environment:
@@ -218,13 +218,13 @@ services:
       _PIP_ADDITIONAL_REQUIREMENTS: ''
     user: "0:0"
     volumes:
-      # - ./sources:/opt/airflow
-      - ./sources/dags:/opt/airflow/dags
-      - ./sources/logs:/opt/airflow/logs
-      - ./sources/config:/opt/airflow/config
-      - ./sources/plugins:/opt/airflow/plugins
-      # - ./sources/helpers:/opt/airflow/helpers
-      - ./sources/data:/opt/airflow/data
+      # - ./source:/opt/airflow
+      - ./source/dags:/opt/airflow/dags
+      - ./source/logs:/opt/airflow/logs
+      - ./source/config:/opt/airflow/config
+      - ./source/plugins:/opt/airflow/plugins
+      # - ./source/helpers:/opt/airflow/helpers
+      - ./source/data:/opt/airflow/data
 
   airflow-cli:
     <<: *airflow-common
