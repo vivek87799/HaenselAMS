@@ -34,9 +34,13 @@ docker-compose up
 ```
 - The Airflow webserver will be exposed on http://0.0.0.0:8080 with the default username and pwd as airflow
 
+ ### *A detailed Design Document on pipeline architecture has been attached to the repo as a pdf*
+ 
 # Pipeline Overview
+ ```markdown
+  The pipeline takes a time range as input that can be assigned in env variables inside the docker-compose.yml file
+ ``` 
 
-A detailed Design Document on pipeline architecture has been attached to the repo
 The pipeline will perform the following steps (Takes the date range as input that is configured as airflow’s env variable. Configurable in environments in the docker-compose.yml provided): See README.md to run the pipeline
 - Init Database: Initialize the tables on SQLite database
 - Data Extraction: Extract session and conversion data from a provided SQLite database (challenge.db) which is preprocess and then persisted as a JSON File.
