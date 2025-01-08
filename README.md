@@ -34,12 +34,15 @@ docker-compose up
 ```
 - The Airflow webserver will be exposed on http://0.0.0.0:8080 with the default username and pwd as airflow
 
-# Design Document
+# Pipeline Overview
 
-A detail insights on the design and the project is attached as a pdf in this repo
+A detailed Design Document on pipeline architecture has been attached to the repo
+The pipeline will perform the following steps (Takes the date range as input that is configured as airflow’s env variable. Configurable in environments in the docker-compose.yml provided): See README.md to run the pipeline
+- Init Database: Initialize the tables on SQLite database
+- Data Extraction: Extract session and conversion data from a provided SQLite database (challenge.db) which is preprocess and then persisted as a JSON File.
+- Customer Journey Construction (Transform data): Combine session and conversion data to build customer journeys for each conversion.
+- API Interaction: Send customer journey data to the IHC Attribution API (https://ihc-attribution.com/marketing-attribution-api/) in asynchronous chunks to receive attribution results.
 
-
-
-
-
+- Attribution Data Storage: Store the received attribution results in the attribution_customer_journey table within the database.
+- Report Generation: Aggregate data and generate the channel_reporting table, summarizing key metrics. Export the channel_reporting data to a CSV file, including calculated CPO (Cost Per Order) and ROAS (Return on Ad Spend) metrics.
 
